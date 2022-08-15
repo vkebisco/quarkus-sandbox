@@ -1,12 +1,15 @@
 package org.experimental.services;
 
+import io.quarkus.security.UnauthorizedException;
+import io.quarkus.security.identity.SecurityIdentity;
+import org.eclipse.microprofile.jwt.JsonWebToken;
 import org.experimental.entities.Person;
 
+import javax.inject.Inject;
 import javax.transaction.Transactional;
 import javax.ws.rs.*;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
-import java.util.List;
 
 
 @Path("/person")
@@ -14,14 +17,19 @@ import java.util.List;
 @Produces(MediaType.APPLICATION_JSON)
 public class PersonService {
 
+    @Inject
+    SecurityIdentity securityIdentity;
+
     @GET
-    public List<Person> findAll(){
-        return Person.listAll();
+    public Response findAll(){
+        authAdmin();
+        return Response.ok(Person.listAll()).build() ;
     }
 
     @POST
     @Transactional
     public Response create(Person person){
+        authUser();
         Person.persist(person);
         return Response.ok().status(201).build();
     }
@@ -29,6 +37,7 @@ public class PersonService {
     @PUT
     @Transactional
     public Response update(Person person) {
+        authAdmin();
         if (person.getId() == null){
             return Response.ok("{\"message\":\"object must have an id\"}").status(400).build();
         }
@@ -44,6 +53,7 @@ public class PersonService {
     @Path("{id}")
     @Transactional
     public Response delete(@PathParam("id") Long id) {
+        authAdmin();
         if (id == null){
             return Response.ok("{\"message\":\"object must have an id\"}").status(400).build();
         }
@@ -51,6 +61,17 @@ public class PersonService {
             return Response.status(204).build();
         }else {
             return Response.ok("{\"message\":\"object with such id does not exist\"}").status(400).build();
+        }
+    }
+    private void authAdmin(){
+        if (!securityIdentity.getRoles().contains("admin")){
+            throw new UnauthorizedException();
+        }
+    }
+
+    private void authUser(){
+        if (!securityIdentity.getRoles().contains("user")){
+            throw new UnauthorizedException();
         }
     }
 }
