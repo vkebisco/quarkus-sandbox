@@ -2,6 +2,7 @@ package org.experimental.services;
 
 import io.quarkus.security.UnauthorizedException;
 import io.quarkus.security.identity.SecurityIdentity;
+import org.eclipse.microprofile.jwt.JsonWebToken;
 import org.experimental.entities.Person;
 
 import javax.inject.Inject;
@@ -9,8 +10,6 @@ import javax.transaction.Transactional;
 import javax.ws.rs.*;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
-import java.util.List;
-import java.util.Set;
 
 
 @Path("/person")
